@@ -1,6 +1,9 @@
 #include "day8.h"
 
+#include <assert.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 ImageData image_data_init(DawnStringBuilder image_data, size_t width, size_t height) {
     ImageData image = {0};
@@ -40,4 +43,50 @@ size_t image_data_get_layer_digit_count(ImageData image, size_t layer, char digi
         if (it[i] == digit) count++;
     }
     return count;
+}
+
+Image image_init(ImageData data) {
+    char *image_data = malloc((data.width + 1) * data.height * sizeof(*image_data) + 1);
+    assert(image_data && "Buy more RAM lol");
+    memset(image_data, ' ', (data.width + 1) * data.height * sizeof(*image_data) + 1);
+    image_data[(data.width + 1) * data.height] = '\0';
+    for (size_t i = 0; i < data.height; i++) {
+        image_data[i * (data.width + 1) + data.width] = '\n';
+    }
+    char **image = malloc(data.height * sizeof(*image));
+    assert(image && "Buy more RAM lol");
+    for (size_t i = 0; i < data.height; i++) {
+        image[i] = image_data + i * (data.width + 1);
+    }
+    for (size_t i = data.length - 1; i < data.length; i--) {
+        char *it = data.items[i];
+        for (size_t j = 0; j < data.height; j++) {
+            for (size_t k = 0; k < data.width; k++) {
+                switch (it[j * data.width + k]) {
+                    case '0': /* Black */
+                        image[j][k] = '.';
+                        break;
+                    case '1': /* White */
+                        image[j][k] = '#';
+                        break;
+                    case '2': /* Transparent */
+                        break;
+                }
+            }
+        }
+    }
+    return (Image){
+        .height = data.height,
+        .width = data.width,
+        .data = image,
+    };
+}
+
+void image_free(Image image) {
+    if (image.data) free(image.data[0]);
+    free(image.data);
+}
+
+void image_print(Image image) {
+    puts(image.data[0]);
 }

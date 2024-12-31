@@ -23,8 +23,10 @@ int main(int argc, char **argv) {
 
     ImageData im = image_data_init(image_data, WIDTH, HEIGHT);
 
-    // TODO
+    Image image = image_init(im);
+    image_print(image);
 
+    image_free(image);
     image_data_free(im);
     DAWN_SB_FREE(image_data);
 
