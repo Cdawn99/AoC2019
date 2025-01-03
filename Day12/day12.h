@@ -5,18 +5,17 @@
 #include <stdint.h>
 
 int64_t parse_int(char *str);
+int64_t absolute_value(int64_t x);
+
+typedef enum {
+    X = 0,
+    Y,
+    Z,
+} Coordinate;
 
 typedef struct {
-    int64_t x;
-    int64_t y;
-    int64_t z;
-} Vector3;
-
-Vector3 vector_subrtact(Vector3 v1, Vector3 v2);
-
-typedef struct {
-    Vector3 pos;
-    Vector3 vel;
+    int64_t pos[3];
+    int64_t vel[3];
 } Moon;
 
 typedef struct {
@@ -31,5 +30,7 @@ void moons_free(Moons moons);
 void moons_step(Moons moons);
 int64_t moons_total_energy(Moons moons);
 void moons_print(Moons moons);
+
+size_t find_coordinate_cycle(Moons moons, Coordinate coord);
 
 #endif // DAY12_H_
