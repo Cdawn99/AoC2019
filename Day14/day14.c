@@ -4,12 +4,13 @@
 #include <assert.h>
 #include <math.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
 typedef struct {
     size_t name;
-    size_t quantity;
+    double quantity;
 } Material;
 
 typedef struct {
@@ -23,14 +24,14 @@ struct Reaction {
     Materials input;
 };
 
-static size_t parse_quantity(char *info) {
-    size_t quantity = 0;
+static double parse_quantity(char *info) {
+    uint64_t quantity = 0;
     while ('0' <= *info && *info <= '9') {
         quantity *= 10;
         quantity += *info - '0';
         info++;
     }
-    return quantity;
+    return (double)quantity;
 }
 
 static size_t parse_name(char *info) {
@@ -88,11 +89,11 @@ void reactions_free(Reactions rs) {
     DAWN_DA_FREE(rs);
 }
 
-size_t compute_ore_requirement(Reactions rs) {
+static Materials initialize_processing_queue(Reactions rs) {
     Materials processing_q = {0};
     for (size_t i = 0; i < rs.length; i++) {
         Material m = rs.items[i].output;
-        m.quantity = 0;
+        m.quantity = 0.0;
         DAWN_DA_APPEND(&processing_q, m);
     }
 
@@ -122,11 +123,17 @@ size_t compute_ore_requirement(Reactions rs) {
         }
     }
     assert(processing_q.items[0].name == parse_name("FUEL"));
-    processing_q.items[0].quantity = 1;
+    processing_q.items[0].quantity = 1.0;
 
     size_t ore = parse_name("ORE");
     Material m_ore = { .name = ore };
     DAWN_DA_APPEND(&processing_q, m_ore);
+
+    return processing_q;
+}
+
+double compute_exact_ore_requirement(Reactions rs) {
+    Materials processing_q = initialize_processing_queue(rs);
 
     for (size_t i = 0; i < processing_q.length - 1; i++) {
         Material product = processing_q.items[i];
@@ -134,7 +141,7 @@ size_t compute_ore_requirement(Reactions rs) {
         Reaction *recipe = rs.items;
         while (recipe->output.name != product.name) recipe++;
 
-        size_t f = ceil((double)product.quantity/recipe->output.quantity);
+        double f = product.quantity/recipe->output.quantity;
 
         for (size_t j = 0; j < recipe->input.length; j++) {
             Material material = recipe->input.items[j];
@@ -146,7 +153,33 @@ size_t compute_ore_requirement(Reactions rs) {
         }
     }
 
-    size_t ore_amount = processing_q.items[processing_q.length - 1].quantity;
+    double ore_amount = processing_q.items[processing_q.length - 1].quantity;
+    DAWN_DA_FREE(processing_q);
+    return ore_amount;
+}
+
+size_t compute_ore_requirement(Reactions rs) {
+    Materials processing_q = initialize_processing_queue(rs);
+
+    for (size_t i = 0; i < processing_q.length - 1; i++) {
+        Material product = processing_q.items[i];
+
+        Reaction *recipe = rs.items;
+        while (recipe->output.name != product.name) recipe++;
+
+        double f = ceil(product.quantity/recipe->output.quantity);
+
+        for (size_t j = 0; j < recipe->input.length; j++) {
+            Material material = recipe->input.items[j];
+
+            Material *pqm = processing_q.items;
+            while (pqm->name != material.name) pqm++;
+
+            pqm->quantity += material.quantity * f;
+        }
+    }
+
+    size_t ore_amount = (size_t)processing_q.items[processing_q.length - 1].quantity;
     DAWN_DA_FREE(processing_q);
     return ore_amount;
 }

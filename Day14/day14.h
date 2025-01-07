@@ -14,6 +14,7 @@ typedef struct {
 Reactions reactions_init(char *filepath);
 void reactions_free(Reactions rs);
 
+double compute_exact_ore_requirement(Reactions rs);
 size_t compute_ore_requirement(Reactions rs);
 
 #endif // DAY14_H_
