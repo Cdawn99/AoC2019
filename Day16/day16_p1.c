@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
     flawed_frequency_transmission(&signal, PHASE_COUNT);
     for (size_t i = 0; i < 8; i++) {
-        printf("%" PRId64, signal.items[i]);
+        printf("%" PRId8, signal.items[i]);
     }
     putchar('\n');
 
