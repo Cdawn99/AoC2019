@@ -17,9 +17,12 @@ int main(int argc, char **argv) {
 
     Position starting_pos = get_starting_position(map);
 
-    size_t shortest_path = compute_shortest_path(map, starting_pos);
+    AdjacencyList al = adjacency_list_init(map, starting_pos);
+
+    size_t shortest_path = compute_shortest_path(al);
     printf("Shortest path to gather all keys: %zu\n", shortest_path);
 
+    adjacency_list_free(al);
     map_free(map);
     DAWN_SB_FREE(map_data);
 
